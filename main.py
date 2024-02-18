@@ -6,14 +6,19 @@ window = tk.Tk()
 window.title("Translate")
 window.config(padx=50, pady=50, bg=BACKGROUND_COLOR)
 # ------------------------ Data Read from CSV ------------------------ #
-data = pandas.read_csv("data/letters.csv").to_dict(orient="records")
 new_word = {}
-
+to_learn = {}
+try:
+    data = pandas.read_csv("data/words_to_learn.csv")
+except FileNotFoundError:
+    to_learn = pandas.read_csv("data/letters.csv").to_dict(orient="records")
+else:
+    to_learn = data.to_dict(orient="records")
 
 def word_change():
     global new_word, flip_timer
     window.after_cancel(flip_timer)
-    new_word = random.choice(data)
+    new_word = random.choice(to_learn)
     card.itemconfig(word_image, image=card_front)
     card.itemconfig(initial_word, text="English", fill="black")
     card.itemconfig(translation, text=new_word["word"], fill="black")
@@ -24,6 +29,13 @@ def change_word():
     card.itemconfig(word_image, image=card_back)
     card.itemconfig(initial_word, text="Hindi", fill="white")
     card.itemconfig(translation, text=new_word["hindi"], fill="white")
+
+
+def words_to_learn():
+    to_learn.remove(new_word)
+    df = pandas.DataFrame(to_learn)
+    df.to_csv("data/words_to_learn.csv", index=False)
+    word_change()
 
 
 flip_timer = window.after(3000, func=change_word)
@@ -42,7 +54,7 @@ card.grid(row=0, column=0, columnspan=2)
 
 # Button
 logo_right = tk.Button(image=right_logo, highlightthickness=0, bg=BACKGROUND_COLOR, padx=50,
-                       highlightbackground=BACKGROUND_COLOR, command=word_change)
+                       highlightbackground=BACKGROUND_COLOR, command=words_to_learn)
 logo_right.grid(row=1, column=0)
 
 logo_wrong = tk.Button(image=wrong_logo, highlightthickness=0, bg=BACKGROUND_COLOR, padx=50,
